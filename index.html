@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Llei Orgànica del Sistema Universitari (LOSU)</title>
+    <!-- Tailwind CSS per al disseny -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome per a les icones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+        
+        /* Animacions personalitzades */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Estils transicions de botons */
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col items-center py-10 px-4">
+
+    <!-- Capçalera -->
+    <header class="w-full max-w-3xl mb-8 text-center fade-in">
+        <div class="inline-flex items-center justify-center p-3 bg-brand-100 rounded-full mb-4 text-brand-600 shadow-sm">
+            <i class="fas fa-university text-2xl"></i>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-2">Quiz de la Llei Orgànica del Sistema Universitari (LOSU)</h1>
+        <p class="text-lg text-slate-600">Estudi Interactiu Complet - 100 Preguntes</p>
+    </header>
+
+    <!-- Contenidor Principal de l'Aplicació -->
+    <main id="app-container" class="w-full max-w-3xl flex-grow flex flex-col relative">
+        
+        <!-- Barra de progrés -->
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6 fade-in shadow-inner overflow-hidden">
+            <div id="progress-bar" class="bg-brand-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between text-sm text-slate-500 font-medium mb-4 fade-in">
+            <span id="question-counter">Pregunta 1 de X</span>
+            <span id="score-counter">Puntuació: 0</span>
+        </div>
+
+        <!-- Targeta de la Pregunta -->
+        <div id="quiz-card" class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-10 mb-6 slide-up w-full relative z-10">
+            <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-slate-800 mb-8 leading-snug">
+                <!-- Text de la pregunta s'inserirà aquí -->
+            </h2>
+            
+            <div id="options-container" class="flex flex-col space-y-4">
+                <!-- Opcions s'inseriran aquí via JS -->
+            </div>
+        </div>
+
+        <!-- Targeta d'Explicació (Amagada inicialment) -->
+        <div id="explanation-card" class="bg-slate-50 rounded-3xl shadow-lg border border-slate-200 p-6 md:p-8 mt-4 hidden slide-up relative z-0">
+            <div class="flex items-start gap-4 mb-4">
+                <div id="feedback-icon" class="flex-shrink-0 mt-1">
+                    <!-- Icona correcte/incorrecte -->
+                </div>
+                <div class="w-full">
+                    <h3 id="feedback-title" class="text-lg font-bold mb-2">
+                        <!-- Títol de resposta -->
+                    </h3>
+                    <p id="explanation-text" class="text-slate-700 leading-relaxed mb-6">
+                        <!-- Text de l'explicació -->
+                    </p>
+                    
+                    <!-- Referència del document (Molt important el format exacte) -->
+                    <div class="inline-flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-slate-200 shadow-sm text-sm font-semibold text-slate-600 w-full break-words">
+                        <i class="fas fa-file-pdf text-red-500 text-lg"></i>
+                        <span id="reference-text" class="leading-tight"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-end">
+                <button id="next-btn" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl transition-colors shadow-md flex items-center gap-2">
+                    Següent Pregunta <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Targeta de Resultats (Amagada inicialment) -->
+        <div id="results-card" class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 md:p-12 text-center hidden slide-up">
+            <div class="inline-flex items-center justify-center p-5 bg-emerald-100 rounded-full mb-6 text-emerald-600 shadow-sm">
+                <i class="fas fa-trophy text-5xl"></i>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Resum de l'Estudi</h2>
+            <p class="text-lg text-slate-600 mb-8">Has completat el test interactiu complet sobre la Llei orgànica 2/2023.</p>
+            
+            <div class="flex justify-center gap-12 mb-10 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <div class="text-center">
+                    <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-2">Encerts</p>
+                    <p id="final-score" class="text-5xl font-bold text-emerald-600">0</p>
+                </div>
+                <div class="w-px bg-slate-200"></div>
+                <div class="text-center">
+                    <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-2">Total</p>
+                    <p id="total-questions" class="text-5xl font-bold text-slate-700">0</p>
+                </div>
+            </div>
+            
+            <button id="restart-btn" class="px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-3 mx-auto w-full md:w-auto text-lg">
+                <i class="fas fa-redo-alt"></i> Tornar a començar
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="mt-12 mb-6 text-center text-slate-400 text-sm">
+        <p>Dissenyat per a l'estudi de la LOSU</p>
+    </footer>
+
+    <script>
+        // L'array complet de 100 preguntes exactament tal i com ho has demanat.
+        const questionsData = [
+          { q: "Quina institució és fonamental en la societat del coneixement segons el preàmbul?", o: ["La universitat", "L'empresa", "L'Estat", "L'escola primària"], a: 0, exp: "El preàmbul destaca la universitat com a institució fonamental.", p: 1 },
+          { q: "Quines són les funcions centrals de l'activitat universitària a part de docència i recerca?", o: ["Compartir i transferir coneixement", "Generar beneficis econòmics", "Formar polítics", "Competir amb altres estats"], a: 0, exp: "Docència, recerca i transferència constitueixen funcions centrals.", p: 2 },
+          { q: "Quant s'ha duplicat l'estudiantat universitari en les últimes quatre dècades?", o: ["Ha superat àmpliament el milió i mig", "Arriba als tres milions", "No ha augmentat", "S'ha reduït a la meitat"], a: 0, exp: "L'estudiantat universitari ha superat àmpliament el milió i mig.", p: 3 },
+          { q: "Quina llei orgànica persegueix aquesta reforma integral?", o: ["La Llei Orgànica del Sistema Universitari", "La Llei d'Educació Secundària", "La Llei de Formació Professional", "La Llei de Bases de Règim Local"], a: 0, exp: "Es tracta de la Llei Orgànica del Sistema Universitari (LOSU).", p: 4 },
+          { q: "Quina dimensió essencial docent inclou la Llei per a totes les edats?", o: ["Formació al llarg de la vida", "Educació obligatòria", "Màsters obligatoris", "Doctorats honorífics"], a: 0, exp: "La formació permanent o al llarg de tota la vida és essencial.", p: 5 },
+          { q: "Quin és el compromís mínim de finançament públic del PIB recollit a la llei?", o: ["1% del PIB", "2% del PIB", "0,5% del PIB", "3% del PIB"], a: 0, exp: "S'estableix assolir un mínim de finançament públic de l'1% del PIB.", p: 6 },
+          { q: "Quin és el límit màxim de contractes temporals de personal docent i investigador (PDI)?", o: ["Es redueix del 40 al 8 per cent", "Del 50 al 20 per cent", "Es manté al 40 per cent", "No hi ha límit fixat"], a: 0, exp: "La llei redueix del 40 al 8 per cent el màxim de contractes temporals del PDI.", p: 7 },
+          { q: "A què es vincula la beca en el nou sistema descrit a la llei?", o: ["A un dret subjectiu vinculat a la situació socioeconòmica", "Només a l'excel·lència acadèmica", "A l'edat de l'estudiant", "Al lloc de naixement"], a: 0, exp: "Es concep la beca com un dret subjectiu vinculat a la situació socioeconòmica.", p: 8 },
+          { q: "Quina normativa queda derogada expressament per aquesta llei orgànica?", o: ["La Llei orgànica 6/2001, de 21 de desembre, d'universitats", "La Constitució Espanyola", "L'Estatut dels Treballadors", "La Llei General de Sanitat"], a: 0, exp: "La disposició derogatòria deixa sense vigència expressament la LO 6/2001.", p: 9 },
+          { q: "Quin és l'objecte d'aquesta Llei orgànica (Art. 1)?", o: ["La regulació del sistema universitari", "La regulació del transport públic", "La sanitat pública", "La defensa nacional"], a: 0, exp: "L'objecte és la regulació del sistema universitari i els mecanismes de coordinació.", p: 10 },
+          { q: "Quina és una funció de la universitat segons l'Art. 2?", o: ["La preparació per a l'exercici d'activitats professionals", "El control de fronteres", "L'emissió de moneda", "L'administració de justícia"], a: 0, exp: "La preparació professional mitjançant coneixements científics és funció de la universitat.", p: 11 },
+          { q: "Quin dret fonamental empara l'autonomia de les universitats (Art. 3)?", o: ["Article 27.10 de la Constitució espanyola", "Article 15 de la Constitució espanyola", "Article 155 de la Constitució espanyola", "Article 1 de la Constitució espanyola"], a: 0, exp: "L'autonomia s'exerceix en virtut de l'article 27.10 de la Constitució.", p: 12 },
+          { q: "Què garanteix l'autonomia universitària pel que fa al professorat (Art. 3.3)?", o: ["La llibertat de càtedra", "El dret a vaga", "El dret a la imatge", "L'exempció d'impostos personals"], a: 0, exp: "L'autonomia universitària garanteix la llibertat de càtedra del professorat.", p: 13 },
+          { q: "Com es portarà a terme la creació d'universitats públiques (Art. 4.1)?", o: ["Per una llei de l'assemblea legislativa de la comunitat autònoma", "Per reial decret llei", "Per ordre ministerial", "Per decisió del rector"], a: 0, exp: "Es fa per llei de l'assemblea legislativa de la comunitat autònoma.", p: 14 },
+          { q: "Qui té la responsabilitat de l'assegurament de la qualitat (Art. 5.2)?", o: ["Responsabilitat compartida per universitats, agències i administracions públiques", "Únicament l'Estat", "Només les universitats privades", "Els estudiants"], a: 0, exp: "És una responsabilitat compartida per les universitats, agències d'avaluació i administracions.", p: 15 },
+          { q: "Com s'imparteix la docència de forma preferent (Art. 6.1)?", o: ["De manera presencial", "Exclusivament online", "Per correu postal", "Només a l'estranger"], a: 0, exp: "La docència, preferentment presencial, es pot impartir també de manera virtual o híbrida.", p: 16 },
+          { q: "On s'han d'inscriure els títols universitaris de caràcter oficial (Art. 7.3)?", o: ["En el Registre d'universitats, centres i títols (RUCT)", "Al Registre Civil", "Al Ministeri de Treball", "Als arxius municipals"], a: 0, exp: "Els títols oficials s'inscriuen al Registre d'universitats, centres i títols.", p: 17 },
+          { q: "Quins són els tres cicles en què s'estructuren els ensenyaments oficials (Art. 9.1)?", o: ["Grau, màster universitari i doctorat", "Primària, secundària i batxillerat", "Llicenciatura, diplomatura i curs d'adaptació", "Cicle inicial, mitjà i superior"], a: 0, exp: "S'estructuren en tres cicles: grau, màster universitari i doctorat.", p: 18 },
+          { q: "Qui estableix les condicions d'homologació de títols oficials estrangers (Art. 10)?", o: ["El Govern, amb l'informe previ del Consell d'Universitats", "Cada universitat autònomament", "El Tribunal Suprem", "L'Ajuntament on s'ubiqui la universitat"], a: 0, exp: "Correspon regular al Govern, amb informe previ del Consell d'Universitats.", p: 19 },
+          { q: "Com es considera el coneixement científic segons l'Art. 12?", o: ["Un bé comú", "Una propietat privada de la universitat", "Un recurs de pagament", "Un secret d'Estat"], a: 0, exp: "El coneixement científic té la consideració d'un bé comú (ciència oberta).", p: 20 },
+          { q: "Què ha de fer el PDI amb la versió final acceptada d'una publicació (Art. 12.2)?", o: ["Dipositar-la en repositoris institucionals d'accés obert", "Vendre-la a editorials internacionals", "Destruir els esborranys", "Guardar-la en secret fins la patent"], a: 0, exp: "El PDI ha de dipositar-la en accés obert de forma simultània a la publicació.", p: 21 },
+          { q: "Com han de ser les comissions d'avaluació de projectes de recerca (Art. 13.2)?", o: ["Amb composició equilibrada entre homes i dones", "Formades exclusivament per catedràtics", "Compostes només per investigadors internacionals", "Anònimes"], a: 0, exp: "S'han d'ajustar al principi de composició equilibrada entre homes i dones.", p: 22 },
+          { q: "Quins són els òrgans de cooperació i coordinació del sistema universitari (Art. 14.1)?", o: ["La Conferència General de Política Universitària i el Consell d'Universitats", "El Congrés i el Senat", "Els Consells Socials de les CCAA", "Les agències autonòmiques exclusivament"], a: 0, exp: "La Conferència General i el Consell d'Universitats són els òrgans de coordinació.", p: 23 },
+          { q: "Qui presideix la Conferència General de Política Universitària (Art. 15.2)?", o: ["El ministre o ministra d'Universitats", "El President del Govern", "El Rei", "Un rector escollit a l'atzar"], a: 0, exp: "Està sota la presidència del ministre o ministra d'Universitats.", p: 24 },
+          { q: "Què és el Consell d'Universitats (Art. 16.1)?", o: ["L'òrgan de coordinació acadèmica del sistema universitari espanyol", "Un sindicat d'estudiants", "L'òrgan que recapta les taxes", "Una associació de catedràtics"], a: 0, exp: "És l'òrgan de coordinació acadèmica, adscrit al Ministeri d'Universitats.", p: 25 },
+          { q: "Quina és una funció del Consell d'Estudiants Universitari de l'Estat (Art. 17.3)?", o: ["Ser interlocutor davant el Ministeri d'Universitats", "Aprovar els pressupostos de l'Estat", "Nomenar el Ministre", "Elegir als rectors de tota Espanya"], a: 0, exp: "Té com a funció ser interlocutor davant el Ministeri d'Universitats.", p: 26 },
+          { q: "A què han de contribuir les universitats pel que fa a l'entorn territorial (Art. 18.3)?", o: ["A revertir les dinàmiques de despoblament", "A concentrar tota la població a les ciutats", "A construir indústries pesades", "A privatitzar l'entorn"], a: 0, exp: "S'han d'implicar en el desenvolupament del seu entorn i contribuir a revertir el despoblament.", p: 27 },
+          { q: "Què han de fer les universitats amb els seus arxius i fons bibliotecaris (Art. 21.4)?", o: ["Digitalitzar-los i fer-los accessibles", "Vendre'ls al millor postor", "Guardar-los sense accés al públic", "Traslladar-los fora de l'Estat"], a: 0, exp: "Han de digitalitzar i fer accessibles els seus arxius i fons bibliotecaris.", p: 28 },
+          { q: "Com han de ser les activitats esportives (Art. 22.1)?", o: ["Accessibles per a totes les persones", "Restringides a atletes d'elit", "Obligatòries per aprovar els graus", "Exclusives per a menors de 25 anys"], a: 0, exp: "Les activitats esportives han de ser accessibles per a totes les persones.", p: 29 },
+          { q: "Qui aprova l'Estratègia d'internacionalització del sistema universitari (Art. 24.1)?", o: ["El Govern, en col·laboració amb les comunitats autònomes i universitats", "La Unió Europea de manera unilateral", "Cada facultat individualment", "El Consell de Seguretat de l'ONU"], a: 0, exp: "El Govern aprova l'Estratègia d'internacionalització del sistema universitari.", p: 30 },
+          { q: "Què han de promoure el Govern, les CCAA i les universitats pel que fa a la mobilitat (Art. 27.1)?", o: ["Programes de mobilitat i intercanvi", "L'aïllament dels investigadors", "L'eliminació d'ERASMUS", "Taxes addicionals per moure's"], a: 0, exp: "Han de promoure programes de mobilitat i intercanvi de l'estudiantat i personal.", p: 31 },
+          { q: "Què s'ha d'agilitzar per facilitar l'atracció de talent (Art. 28.2)?", o: ["Els tràmits d'homologació i declaració d'equivalència de títols", "Les proves físiques d'accés", "L'obtenció del carnet de conduir", "El procés per comprar habitatge"], a: 0, exp: "El Govern ha d'agilitar i simplificar els tràmits d'homologació i d'equivalència.", p: 32 },
+          { q: "Quin percentatge de places es reserva per a estudiants amb discapacitat (Art. 31.4)?", o: ["Un 5 per cent de les places", "Un 1 per cent", "Un 10 per cent", "No hi ha quota de reserva"], a: 0, exp: "Es reserva com a mínim un 5 per cent de les places ofertes.", p: 33 },
+          { q: "A quins criteris respon prioritàriament la concessió de beques (Art. 32.4)?", o: ["A criteris socioeconòmics", "A l'expedient exclusivament", "A la edat del sol·licitant", "A la zona de residència sense tenir en compte els ingressos"], a: 0, exp: "La concessió respon prioritàriament i fonamentalment a criteris socioeconòmics.", p: 34 },
+          { q: "Quin dret relacionat amb manifestacions col·lectives s'atorga a l'estudiantat (Art. 33.p)?", o: ["El dret a l'atur acadèmic", "El dret a no pagar matrícula durant vagues", "El dret a aprovar sense examinar-se", "El dret a triar els catedràtics"], a: 0, exp: "Es reconeix l'atur acadèmic, respectant el dret a l'educació de l'estudiantat.", p: 35 },
+          { q: "Quina mesura d'acció positiva cal adoptar respecte a l'estudiantat amb discapacitat (Art. 37.2)?", o: ["Efectuar ajustos raonables curriculars i metodològics", "Eximir-los de l'assistència", "Aprovar-los automàticament", "Reduir els crèdits del grau"], a: 0, exp: "S'han d'adoptar ajustos raonables curriculars, metodològics i d'avaluació.", p: 36 },
+          { q: "Quina obligació té l'estudiantat universitari segons l'Art. 36?", o: ["Respectar la normativa universitària de convivència", "Assumir tasques docents obligatòries", "Finançar la recerca", "Estar associat a un sindicat"], a: 0, exp: "L'estudiantat queda subjecte a respectar la normativa de convivència.", p: 37 },
+          { q: "Qui comprova la legalitat i aprova els estatuts d'una universitat pública (Art. 38.1)?", o: ["La comunitat autònoma", "El Ministeri de Justícia", "El Consell d'Estat", "L'Ajuntament"], a: 0, exp: "Després que se n'hagi comprovat la legalitat, els aprova la comunitat autònoma.", p: 38 },
+          { q: "Quin mecanisme de transparència han de tenir les universitats (Art. 39.3)?", o: ["Un portal de transparència", "Un canal de televisió propi", "Un diari imprès setmanal", "Un registre tancat al públic"], a: 0, exp: "Les universitats han de disposar d'un portal de transparència.", p: 39 },
+          { q: "Qui acorda la creació, modificació i supressió de facultats i escoles (Art. 41.1)?", o: ["La comunitat autònoma, a proposta de la universitat", "El rector de forma unilateral", "El Govern central per decret", "El Consell d'Estudiants"], a: 0, exp: "L'acorda la comunitat autònoma, a iniciativa de la universitat (Consell de Govern).", p: 40 },
+          { q: "Què requereix l'adscripció de centres docents universitaris (Art. 42.1)?", o: ["La formalització prèvia d'un conveni amb la universitat", "El pagament d'una taxa autonòmica alta", "Que el centre sigui obligatòriament de naturalesa privada", "Que els professors tinguin plaça fixa de funcionari"], a: 0, exp: "Requereix la formalització prèvia d'un conveni amb la universitat.", p: 41 },
+          { q: "De quina d'aquestes unitats bàsiques han de disposar les universitats (Art. 43.1)?", o: ["Unitats d'igualtat i de diversitat", "Un cos de policia universitari", "Un registre mercantil", "Un servei nacional de duanes"], a: 0, exp: "Han de disposar d'unitats d'igualtat i diversitat, defensoria universitària, etc.", p: 42 },
+          { q: "Quina és la durada del mandat dels titulars d'òrgans unipersonals electes (Art. 44.3)?", o: ["Sis anys improrrogables i no renovables", "Quatre anys, renovables una vegada", "Cinc anys renovables", "Fins a la jubilació"], a: 0, exp: "El mandat és, en tots els casos, de sis anys improrrogables i no renovables.", p: 43 },
+          { q: "Quin és el màxim òrgan de representació i participació de la comunitat universitària (Art. 45.1)?", o: ["El Claustre Universitari", "El Consell de Govern", "La Junta de Facultat", "El Consell Social"], a: 0, exp: "El Claustre Universitari és el màxim òrgan de representació i participació.", p: 44 },
+          { q: "Quina és la funció fonamental del Consell de Govern (Art. 46.1)?", o: ["És el màxim òrgan de govern de la universitat", "És l'òrgan només pels estudiants", "Recapta fons exclusivament", "Només té funcions disciplinàries"], a: 0, exp: "El Consell de Govern és el màxim òrgan de govern de la universitat.", p: 45 },
+          { q: "Quin és l'òrgan de participació i representació de la societat a la universitat (Art. 47.1)?", o: ["El Consell Social", "El Consell d'Universitats", "El Consell d'Estudiants", "El Senat Acadèmic"], a: 0, exp: "El Consell Social és l'òrgan de participació i representació de la societat.", p: 46 },
+          { q: "Qui defensa els interessos de l'estudiantat en els òrgans de govern (Art. 48.3)?", o: ["El Consell d'Estudiants", "La Unitat d'Igualtat", "El Gerent", "El Consell Social"], a: 0, exp: "El Consell d'Estudiants té com a funció defensar els interessos de l'estudiantat.", p: 47 },
+          { q: "Qui exerceix les funcions de direcció, govern i gestió de la universitat (Art. 50.1)?", o: ["El rector o la rectora", "El conseller d'Educació", "El president de la CCAA", "El Síndic de Greuges"], a: 0, exp: "El rector o la rectora exerceix aquestes funcions.", p: 48 },
+          { q: "Quina condició necessita un candidat per ser escollit rector en primera volta (Art. 51.2)?", o: ["Suport de més de la meitat dels vots vàlidament emesos", "Suport d'un terç dels vots", "Unanimitat del Claustre", "Només ser el més votat, encara que no superi la meitat"], a: 0, exp: "S'exigeix el suport de més de la meitat dels vots vàlidament emesos amb les ponderacions.", p: 49 },
+          { q: "Com s'elegeixen els degans de facultat i directors d'escola (Art. 52.1)?", o: ["Elecció directa per sufragi universal", "Designació digital del rector", "Sorteig públic", "Per antiguitat acadèmica"], a: 0, exp: "S'elegeixen mitjançant elecció directa per sufragi universal en la forma estatutària.", p: 50 },
+          { q: "Quines normes regeixen el règim econòmic de les universitats (Art. 53.1)?", o: ["Aquesta Llei orgànica i la legislació aplicable al sector públic", "Només els seus propis estatuts", "La llei de societats anònimes", "Les normes europees de mercat obert"], a: 0, exp: "Es regeixen per aquesta Llei i per la legislació aplicable al sector públic.", p: 51 },
+          { q: "Quin percentatge del PIB s'estableix com a objectiu de despesa en educació universitària pública (Art. 55.2)?", o: ["Com a mínim l'1 per cent", "El 3 per cent", "El 0.5 per cent", "El 5 per cent"], a: 0, exp: "Comparteixen l'objectiu de destinar com a mínim l'1 per cent del producte interior brut.", p: 52 },
+          { q: "Quin eix de finançament permet cobrir despeses de personal i operació bàsica (Art. 56.3.a)?", o: ["Finançament estructural basal", "Finançament per necessitats singulars", "Finançament per objectius", "Fons de recuperació exclusivament"], a: 0, exp: "El finançament estructural basal ha de ser suficient per prestar un servei públic.", p: 53 },
+          { q: "Com ha de ser el pressupost de les universitats (Art. 57.1)?", o: ["Públic, únic, equilibrat", "Privat i reservat", "Deficitari per inversió", "Bimensual"], a: 0, exp: "El pressupost ha de ser públic, únic, equilibrat, i comprendre ingressos i despeses.", p: 54 },
+          { q: "Quin percentatge mínim del pressupost s'ha de dedicar a programes propis de recerca (Art. 57.7)?", o: ["No inferior al 5 per cent", "El 10 per cent", "L'1 per cent", "No hi ha límit, és voluntari"], a: 0, exp: "Han de dedicar un percentatge no inferior al 5 per cent a recerca.", p: 55 },
+          { q: "Què conforma el patrimoni de la universitat a part dels seus béns materials (Art. 58.4)?", o: ["Drets de propietat industrial i intel·lectual", "L'espai aeri del campus", "Els deutes dels alumnes", "Tots els llibres publicats a la ciutat"], a: 0, exp: "Formen part del patrimoni els drets de propietat industrial i propietat intel·lectual.", p: 56 },
+          { q: "Quin sistema han d'implantar les universitats per la transparència financera (Art. 59.4)?", o: ["Un sistema de comptabilitat analítica o equivalent", "Una caixa B autoritzada", "Un balanç manual no fiscalitzat", "Pagaments en criptomonedes"], a: 0, exp: "Han d'implantar un sistema de comptabilitat analítica o equivalent.", p: 57 },
+          { q: "Qui pot subscriure contractes per realitzar treballs científics a la universitat (Art. 60.1)?", o: ["Grups de recerca, departaments i instituts", "Qualsevol estudiant independent", "Únicament el Rector", "L'Ajuntament de la ciutat"], a: 0, exp: "Ho poden fer grups de recerca, departaments i instituts universitaris de recerca.", p: 58 },
+          { q: "Quin temps màxim pot durar l'excedència del PDI per incorporar-se a una empresa basada en el coneixement (Art. 61.3)?", o: ["Cinc anys", "Deu anys", "Un any", "De per vida"], a: 0, exp: "Només es pot concedir per un temps màxim de cinc anys.", p: 59 },
+          { q: "Qui compon el personal docent i investigador (Art. 64.1)?", o: ["Professorat dels cossos docents universitaris i professorat laboral", "Només funcionaris", "Només personal amb contracte temporal", "Estudiants de doctorat exclusivament"], a: 0, exp: "Està compost pel professorat dels cossos docents i el professorat laboral.", p: 60 },
+          { q: "Què permet afavorir l'Art. 65.1 en els concursos d'accés de PDI?", o: ["Mesures d'acció positiva per afavorir l'accés de les dones", "Taxes d'ingrés més altes", "Més dies de vacances generals", "Contractar només a joves"], a: 0, exp: "Es poden establir mesures d'acció positiva per afavorir-hi l'accés de les dones.", p: 61 },
+          { q: "La mobilitat temporal del PDI (Art. 66.2) a altres universitats o centres com pot ser?", o: ["A temps complet o a temps parcial", "Només a temps complet i sense sou", "Prohibida per llei", "Exclusivament a l'estranger"], a: 0, exp: "La vinculació a una altra universitat pot ser a temps complet o a temps parcial.", p: 62 },
+          { q: "Quins són els cossos docents universitaris (Art. 68.1)?", o: ["Catedràtics/ques i Professors/es titulars d'universitat", "Adjunts i Associats", "Visitants i Emèrits", "Lectores i Llicenciats"], a: 0, exp: "Pertanyen als cossos de catedràtiques/ics i professores/ors titulars.", p: 63 },
+          { q: "Què s'exigeix previament per accedir als cossos docents universitaris (Art. 69.1)?", o: ["L'obtenció d'una acreditació per part de l'ANECA", "Pagar una fiança", "Haver estat alumne de la mateixa universitat", "No cal cap requisit a part del doctorat"], a: 0, exp: "Exigeix, a més del títol de doctor, l'obtenció prèvia d'una acreditació.", p: 64 },
+          { q: "Com s'han de proveir les places vinculades a institucions sanitàries (Art. 70.2)?", o: ["Per concurs entre els seleccionats en concursos d'accés als cossos docents", "Per designació directa del gerent de l'hospital", "Per antiguitat al col·legi de metges", "A dit pel ministeri"], a: 0, exp: "S'han de proveir per concurs entre els seleccionats als concursos d'accés.", p: 65 },
+          { q: "Com s'integren les comissions de selecció per als concursos d'accés (Art. 71.1.b)?", o: ["Majoria de membres externs elegits per sorteig públic", "Només professors del mateix departament", "Rector, Degà i Director de departament només", "Membres del Consell Social exclusivament"], a: 0, exp: "S'integren per una majoria de membres externs elegits per sorteig públic.", p: 66 },
+          { q: "Quant temps cal haver ocupat el lloc d'origen per concursar en mobilitat (Art. 72.2)?", o: ["Com a mínim dos anys", "Mínim cinc anys", "Deu anys", "No hi ha temps mínim"], a: 0, exp: "Poden participar els qui hagin ocupat com a mínim dos anys el lloc d'origen.", p: 67 },
+          { q: "Quin efecte té admetre a tràmit una reclamació contra una proposta de comissió (Art. 73.2)?", o: ["S'han de suspendre els nomenaments fins a la seva resolució", "S'arxiva directament", "El candidat esdevé catedràtic automàticament", "Es despatxa a la comissió de selecció"], a: 0, exp: "Admesa a tràmit, s'han de suspendre els nomenaments fins a la resolució.", p: 68 },
+          { q: "Quantes hores lectives ha de tenir assignades un professor funcionari a temps complet (Art. 75.2)?", o: ["Màxim de 240 i mínim de 120 hores lectives", "Sempre 300 hores", "Mínim de 10 hores", "El que decideixi l'estudiantat lliurement"], a: 0, exp: "Ha de tenir assignat un màxim de 240 i un mínim de 120 hores lectives per curs.", p: 69 },
+          { q: "A qui correspon valorar inicialment els mèrits pels complements retributius docents/investigadors (Art. 76.2)?", o: ["S'assignen amb la valoració prèvia de l'ANECA", "Ho decideix el sindicat d'estudiants", "Ho determina el Rector individualment", "El Ministeri d'Hisenda directament"], a: 0, exp: "Aquests complements s'han d'assignar amb la valoració prèvia de l'ANECA.", p: 70 },
+          { q: "Quines normatives s'apliquen supletòriament al PDI laboral (Art. 77.2)?", o: ["L'Estatut dels treballadors i convenis col·lectius", "El codi penal militar", "La Llei de Societats de Capital", "El Codi Civil exclusivament"], a: 0, exp: "Se'ls aplica l'Estatut dels treballadors i els convenis col·lectius aplicables.", p: 71 },
+          { q: "Quina durada té el contracte de professor ajudant doctor (Art. 78.e)?", o: ["Sis anys", "Tres anys", "Indefinit des del primer dia", "Nou anys"], a: 0, exp: "La durada del contracte ha de ser de sis anys.", p: 72 },
+          { q: "Quin requisit cal per contractar un professor associat (Art. 79.a)?", o: ["Especialistes de competència que exerceixin l'activitat principal fora de l'àmbit acadèmic", "Joves acabats de graduar sense experiència", "Qualsevol persona a l'atur", "Investigadors a temps complet del CSIC"], a: 0, exp: "Cal acreditar exercir l'activitat principal fora de l'àmbit acadèmic universitari.", p: 73 },
+          { q: "Per a què serveix la contractació d'un professor substitut (Art. 80.1)?", o: ["Substituir PDI amb dret a reserva de lloc de treball o baixa", "Crear places estructurals permanents", "Catedràtics en excedència permanent", "Fer la docència de mestres de primària"], a: 0, exp: "Substituir personal amb dret a reserva de lloc o que suspengui temporalment el servei.", p: 74 },
+          { q: "A qui es pot nomenar professor emèrit (Art. 81.a)?", o: ["PDI jubilat que hagi prestat serveis destacats", "A qualsevol alumne que hagi acabat el grau", "Als ex-rectors exclusivament", "A polítics retirats"], a: 0, exp: "Es poden nomenar d'entre el PDI jubilat que hagi prestat serveis destacats.", p: 75 },
+          { q: "Quina és la dedicació normal de la figura de professor permanent laboral (Art. 82.c)?", o: ["A temps complet, tot i que pot ser parcial a petició", "Sempre a temps parcial", "Zero hores lectives", "Una hora al mes per llei"], a: 0, exp: "Ha de comportar una dedicació a temps complet, o parcial a petició de l'interessat.", p: 76 },
+          { q: "Quina és la durada màxima del contracte de professor visitant (Art. 83.c)?", o: ["Dos anys, improrrogable i no renovable", "Cinc anys", "Deu anys", "És un contracte indefinit"], a: 0, exp: "El contracte ha de tenir una durada màxima de dos anys improrrogable.", p: 77 },
+          { q: "Quin tipus de PDI es contracta sota la modalitat de professor distingit (Art. 84.a)?", o: ["Docents/investigadors l'excel·lència dels quals sigui reconeguda internacionalment", "Estudiants de primer curs", "PDI sense doctorat", "Personal administratiu"], a: 0, exp: "Són aquells l'excel·lència i contribució dels quals siguin significatives i reconegudes.", p: 78 },
+          { q: "Quin sentit té el silenci administratiu en el procediment d'acreditació de permanent laboral (Art. 85.3)?", o: ["Desestimatori", "Estimatori (Positiu)", "No existeix silenci", "Es paralitza l'expedient indefinidament"], a: 0, exp: "En aquests procediments d'acreditació el sentit del silenci administratiu és desestimatori.", p: 79 },
+          { q: "Excepte algunes modalitats, com es fa la selecció de PDI laboral (Art. 86.1)?", o: ["Mitjançant concurs públic publicat al registre", "A dit pel rector", "Per antiguitat a la universitat", "Per quotes d'afiliació sindical"], a: 0, exp: "S'ha de fer mitjançant concurs públic amb publicitat al registre corresponent.", p: 80 },
+          { q: "Com gaudeixen els nacionals de la UE per als concursos de PDI respecte als espanyols (Art. 88.2)?", o: ["Gaudeixen d'idèntic tractament i mateixos efectes", "Han de pagar el doble de taxes", "No es poden presentar mai", "Necessiten aprovació de l'ambaixador"], a: 0, exp: "Els nacionals de la UE gaudeixen d'idèntic tractament i efectes.", p: 81 },
+          { q: "Com s'estructura el personal tècnic, de gestió i d'administració i serveis (PTGAS) (Art. 89.1)?", o: ["Està format per personal funcionari i laboral", "Són només treballadors autònoms externalitzats", "Només funcionaris d'elit", "Només estudiants en pràctiques"], a: 0, exp: "Està format per personal funcionari i laboral.", p: 82 },
+          { q: "Mitjançant quins mecanismes pot desenvolupar la seva carrera professional el PTGAS (Art. 90.2)?", o: ["Progressió de grau, categoria, escala o nivell", "Només per decrets de la Generalitat", "Només fent hores extres gratuïtes", "Participació en tertúlies a la ràdio"], a: 0, exp: "Mitjançant la progressió de grau, categoria, escala o nivell.", p: 83 },
+          { q: "Com s'ha de fer la selecció del PTGAS (Art. 91.1)?", o: ["Mitjançant la superació de proves selectives d'accés (concurrència i igualtat)", "Nomenament automàtic sense proves", "Només amb entrevista personal sense temari", "Llistes tancades triades per sindicats"], a: 0, exp: "Mitjançant proves selectives d'accés garantint igualtat, mèrit i capacitat.", p: 84 },
+          { q: "A través de quin sistema es proveeixen normalment els llocs de PTGAS (Art. 92.2)?", o: ["Mitjançant el sistema de concurs", "Sistema d'herència de càrrec", "Sorteig pur de la loteria", "Subhasta pública"], a: 0, exp: "La provisió es fa mitjançant el sistema de concurs.", p: 85 },
+          { q: "Qui assigna els incentius econòmics addicionals al PTGAS si n'hi ha (Art. 93.3)?", o: ["Mitjançant procediment transparent basat en objectivitat", "En metàl·lic sense declarar", "El cap de departament a la seva discreció", "Es reparteix a parts iguals sempre"], a: 0, exp: "S'han d'assignar mitjançant procediment transparent garantint objectivitat.", p: 86 },
+          { q: "Quina personalitat jurídica tenen les universitats privades (Art. 95.1)?", o: ["Personalitat jurídica pròpia amb ànim de lucre o de caràcter social", "Només poden ser entitats estatals", "No tenen personalitat pròpia", "Són filials de ministeris"], a: 0, exp: "Tenen personalitat jurídica pròpia en formes existents legalment (lucre o social).", p: 87 },
+          { q: "Qui no pot crear universitats privades (Art. 96.2)?", o: ["Qui presti serveis en una Administració educativa o tingui antecedents penals per delictes dolosos", "Els ciutadans europeus", "Les cooperatives de professors", "Qualsevol persona nascuda fora d'Espanya"], a: 0, exp: "Incompatible si presten serveis educatius o tenen antecedents penals per delictes dolosos.", p: 88 },
+          { q: "Han de tenir defensoria universitària les universitats privades (Art. 97.2)?", o: ["Sí, junt amb unitats d'igualtat i de diversitat", "No, no és obligatori per elles", "Només si tenen més de 10000 alumnes", "Sí, però només per defensar els propietaris"], a: 0, exp: "Les universitats privades han de tenir una defensoria, i unitats d'igualtat i diversitat.", p: 89 },
+          { q: "Com s'han de prendre les decisions acadèmiques a les universitats privades (Art. 98.1)?", o: ["Per òrgans amb representació majoritària de PDI", "Exclusivament per la junta d'accionistes", "Pel rector de manera dictatorial", "Pels inversors privats únicament"], a: 0, exp: "Garanteixen que les decisions de naturalesa acadèmica les adoptin òrgans on el PDI té majoria.", p: 90 },
+          { q: "Quin percentatge de PDI doctor en privada ha de tenir avaluació positiva (Art. 99.3)?", o: ["Almenys el 60 per cent del professorat doctor", "El 100 per cent obligatòriament", "Només el 10 per cent", "No cal cap professor avaluat"], a: 0, exp: "Almenys el 60 per cent del total del professorat doctor ha de tenir avaluació positiva.", p: 91 },
+          { q: "Quin àmbit d'actuació té la UNED (DA 1.1)?", o: ["El conjunt de l'Estat i l'estranger", "Només Madrid", "Exclusivament virtual, no existeix ubicació", "L'àmbit d'actuació escolar bàsic"], a: 0, exp: "El seu àmbit és el conjunt de l'Estat i llocs a l'estranger.", p: 92 },
+          { q: "Quina naturalesa té la Universitat Internacional Menéndez Pelayo (DA 2.2)?", o: ["Organisme autònom adscrit al Ministeri d'Universitats", "Universitat Privada", "Fundació del tercer sector", "Entitat amb ànim de lucre"], a: 0, exp: "Té naturalesa d'organisme autònom adscrit al Ministeri d'Universitats.", p: 93 },
+          { q: "Quina prohibició existeix per als col·legis majors privats amb règim segregat (DA 7.4)?", o: ["No es poden adscriure a una universitat pública", "S'han de tancar immediatament", "Paguen el triple d'impostos", "No poden servir menjar a les habitacions"], a: 0, exp: "No es poden adscriure a una universitat pública.", p: 94 },
+          { q: "Mantenen vigència els títols de diplomat, llicenciat, etc. previs (DA 10)?", o: ["Mantenen la plena vigència acadèmica, administrativa i professional", "Perden tots els seus efectes professionals", "S'han de convalidar obligatòriament al grau", "Només tenen vigència administrativa, no acadèmica"], a: 0, exp: "Mantenen la plena vigència en els mateixos termes en què es van establir.", p: 95 },
+          { q: "A quina universitat s'adscriuen els Centres universitaris de la defensa (DA 5.1)?", o: ["Estan adscrits a una universitat pública", "Són universitats privades militars", "Estan adscrits només al Ministeri d'Interior", "Són centres de formació professional"], a: 0, exp: "Estan adscrits a una universitat pública i imparteixen graus.", p: 96 },
+          { q: "S'han de donar d'alta els professors emèrits al règim general de Seguretat Social (DA 12.2)?", o: ["No es donen d'alta en el règim general de la SS", "Sí, a jornada completa obligada", "Només per les hores de cotització efectives", "Sí, junt amb el règim militar si escau"], a: 0, exp: "No es donen d'alta al règim general de la Seguretat Social.", p: 97 },
+          { q: "Quin és el termini màxim per aprovar els nous Estatuts (DT 1.1)?", o: ["Tres anys a comptar de l'entrada en vigor de la llei", "Sis mesos naturals", "Un any escolar", "No hi ha límit de temps fixat"], a: 0, exp: "Tenen un termini màxim de tres anys per aprovar els nous Estatuts.", p: 98 },
+          { q: "Quin és l'any límit final per implementar l'estabilització (DT 9 bis.1)?", o: ["El final del curs acadèmic 2027-2028 (juny de 2028)", "El final de l'any 2023", "Desembre de 2030", "Juny de 2025"], a: 0, exp: "El període màxim s'ha prorrogat fins al final del curs acadèmic 2027-2028.", p: 99 },
+          { q: "Quan entra en vigor aquesta Llei orgànica (DF 12)?", o: ["Al cap de vint dies de la seva publicació en el BOE", "L'endemà de la seva aprovació", "L'1 de gener de l'any següent", "El mateix dia de publicar-se"], a: 0, exp: "Entra en vigor al cap de vint dies de la seva publicació en el Butlletí Oficial de l'Estat.", p: 100 }
+        ];
+
+        // Variables d'estat
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+        let currentOptionsMapped = [];
+
+        // Elements del DOM
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const explanationCard = document.getElementById('explanation-card');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const explanationText = document.getElementById('explanation-text');
+        const referenceText = document.getElementById('reference-text');
+        const nextBtn = document.getElementById('next-btn');
+        const quizCard = document.getElementById('quiz-card');
+        const resultsCard = document.getElementById('results-card');
+        const progressBar = document.getElementById('progress-bar');
+        const questionCounter = document.getElementById('question-counter');
+        const scoreCounter = document.getElementById('score-counter');
+        const restartBtn = document.getElementById('restart-btn');
+        const finalScore = document.getElementById('final-score');
+        const totalQuestions = document.getElementById('total-questions');
+
+        // Inicialització
+        function initApp() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsCard.classList.add('hidden');
+            quizCard.classList.remove('hidden');
+            updateUI();
+            loadQuestion();
+        }
+
+        // Funció per barrejar un array (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Carregar pregunta actual
+        function loadQuestion() {
+            hasAnswered = false;
+            explanationCard.classList.add('hidden');
+            explanationCard.classList.remove('slide-up');
+            
+            const q = questionsData[currentQuestionIndex];
+            questionText.textContent = q.q;
+            
+            // Netejar opcions prèvies
+            optionsContainer.innerHTML = '';
+            
+            // Mapar les opcions per guardar quina era la correcta (índex 'a') abans de barrejar
+            currentOptionsMapped = q.o.map((optText, index) => {
+                return {
+                    text: optText,
+                    isCorrect: index === q.a
+                };
+            });
+            
+            // Barrejar les opcions perquè la correcta no estigui sempre al mateix lloc
+            currentOptionsMapped = shuffleArray(currentOptionsMapped);
+            
+            // Generar botons d'opció a la interfície
+            currentOptionsMapped.forEach((optObj, renderedIndex) => {
+                const button = document.createElement('button');
+                button.className = "option-btn w-full text-left p-4 md:p-5 rounded-xl border-2 border-slate-200 bg-white font-medium text-slate-700 hover:border-brand-300 hover:bg-brand-50 flex items-center";
+                button.innerHTML = `
+                    <div class="w-8 h-8 rounded-full border-2 border-slate-300 flex items-center justify-center mr-4 flex-shrink-0 option-circle transition-colors">
+                        <span class="text-sm option-letter"></span>
+                    </div>
+                    <span>${optObj.text}</span>
+                `;
+                button.onclick = () => selectOption(renderedIndex, button);
+                optionsContainer.appendChild(button);
+            });
+
+            updateUI();
+        }
+
+        // Gestionar selecció d'una resposta
+        function selectOption(selectedIndex, selectedBtn) {
+            if (hasAnswered) return; // Evitar respostes múltiples
+            hasAnswered = true;
+
+            const q = questionsData[currentQuestionIndex];
+            const isCorrect = currentOptionsMapped[selectedIndex].isCorrect;
+            const buttons = optionsContainer.querySelectorAll('button');
+
+            if (isCorrect) score++;
+
+            // Estilitzar botons basant-se en la resposta
+            buttons.forEach((btn, index) => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-brand-300', 'hover:bg-brand-50', 'cursor-pointer');
+                
+                const circle = btn.querySelector('.option-circle');
+                const btnIsCorrectOpt = currentOptionsMapped[index].isCorrect;
+                
+                if (btnIsCorrectOpt) {
+                    // Estil per a la resposta correcta
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+                    circle.classList.remove('border-slate-300');
+                    circle.classList.add('border-emerald-500', 'bg-emerald-500', 'text-white');
+                    circle.innerHTML = '<i class="fas fa-check"></i>';
+                } else if (index === selectedIndex && !isCorrect) {
+                    // Estil per a la resposta incorrecta seleccionada
+                    btn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-800');
+                    circle.classList.remove('border-slate-300');
+                    circle.classList.add('border-rose-500', 'bg-rose-500', 'text-white');
+                    circle.innerHTML = '<i class="fas fa-times"></i>';
+                } else {
+                    // Desactivar les restants
+                    btn.classList.add('opacity-50', 'bg-slate-50');
+                }
+            });
+
+            showExplanation(isCorrect, q);
+            updateUI();
+        }
+
+        // Mostrar el panell d'explicació inferior
+        function showExplanation(isCorrect, questionData) {
+            // Configurar icona i títol
+            if (isCorrect) {
+                feedbackIcon.innerHTML = '<div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><i class="fas fa-check text-xl"></i></div>';
+                feedbackTitle.textContent = "¡Correcte!";
+                feedbackTitle.className = "text-xl font-bold text-emerald-700 mb-2";
+            } else {
+                feedbackIcon.innerHTML = '<div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600"><i class="fas fa-times text-xl"></i></div>';
+                feedbackTitle.textContent = "Incorrecte";
+                feedbackTitle.className = "text-xl font-bold text-rose-700 mb-2";
+            }
+
+            // Inserir text i l'exacta referència requerida
+            explanationText.innerHTML = `<strong>Explicació:</strong> ${questionData.exp}`;
+            referenceText.textContent = `Document de referència: 2043462.pdf - Pàgina ${questionData.p}`;
+
+            // Mostrar el panell amb animació
+            explanationCard.classList.remove('hidden');
+            // Hack per re-activar l'animació CSS
+            void explanationCard.offsetWidth; 
+            explanationCard.classList.add('slide-up');
+            
+            // Fer scroll automàtic si es necessari a dispositius petits
+            setTimeout(() => {
+                explanationCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        // Gestionar pas a la següent pregunta o finalització
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questionsData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Mostrar pantalla final
+        function showResults() {
+            quizCard.classList.add('hidden');
+            explanationCard.classList.add('hidden');
+            resultsCard.classList.remove('hidden');
+            
+            finalScore.textContent = score;
+            totalQuestions.textContent = questionsData.length;
+            
+            // Animar el bar de progrés al 100%
+            progressBar.style.width = '100%';
+            
+            // Reposicionar al principi
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Actualitzar els indicadors visuals de UI (marcador, barra, etc.)
+        function updateUI() {
+            questionCounter.textContent = `Pregunta ${currentQuestionIndex + 1} de ${questionsData.length}`;
+            scoreCounter.textContent = `Puntuació: ${score}`;
+            
+            const progressPercentage = ((currentQuestionIndex) / questionsData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+
+        // Event Listeners
+        nextBtn.addEventListener('click', nextQuestion);
+        restartBtn.addEventListener('click', initApp);
+
+        // Iniciar aplicació al carregar
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
